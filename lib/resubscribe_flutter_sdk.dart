@@ -47,8 +47,8 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
       });
     });
 
-    // final base = 'https://app.resubscribe.ai';
-    final base = 'http://localhost:3000';
+    final base = 'https://app.resubscribe.ai';
+    // final base = 'http://localhost:3000';
 
     final queryParams = {
       'ait': widget.aiType,
