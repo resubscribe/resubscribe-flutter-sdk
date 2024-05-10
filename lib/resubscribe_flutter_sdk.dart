@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-class Resubscribe extends StatefulWidget {
+class ResubscribeSDK extends StatefulWidget {
   final String aiType;
   final String uid;
   final String consent;
@@ -12,7 +12,7 @@ class Resubscribe extends StatefulWidget {
   final Color loadingColor;
   final Color backgroundColor;
 
-  const Resubscribe({
+  const ResubscribeSDK({
     Key? key,
     required this.aiType,
     required this.uid,
@@ -25,10 +25,10 @@ class Resubscribe extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ResubscribeState createState() => _ResubscribeState();
+  _ResubscribeSDKState createState() => _ResubscribeSDKState();
 }
 
-class _ResubscribeState extends State<Resubscribe> {
+class _ResubscribeSDKState extends State<ResubscribeSDK> {
   late final WebViewController _controller;
   bool isLoading = true;
   bool showCloseButton = false;
