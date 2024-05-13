@@ -11,7 +11,14 @@ Flutter SDK for [Resubscribe](https://resubscribe.ai).
 Add a `showResubscribe` variable to your state.
 
 ```dart
-bool showResubscribe = true;
+bool showResubscribe = false;
+```
+
+Trigger the `ResubscribeSDK` by setting `showResubscribe` to true.
+```dart
+setState(() {
+  showResubscribe = true;
+});
 ```
 
 Add the `ResubscribeSDK` to your widget tree.
