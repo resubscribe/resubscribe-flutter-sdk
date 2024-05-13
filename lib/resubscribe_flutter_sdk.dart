@@ -7,8 +7,8 @@ class ResubscribeSDK extends StatefulWidget {
   final String uid;
   final String consent;
   final String slug;
-  final bool opened;
   final VoidCallback onClose;
+  final bool debugMode;
   final Color loadingColor;
   final Color backgroundColor;
 
@@ -18,8 +18,8 @@ class ResubscribeSDK extends StatefulWidget {
     required this.uid,
     this.consent = 'given',
     required this.slug,
-    required this.opened,
     required this.onClose,
+    this.debugMode = false,
     this.loadingColor = Colors.black,
     this.backgroundColor = Colors.white,
   }) : super(key: key);
@@ -42,9 +42,11 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
     backgroundColor = widget.backgroundColor.withOpacity(0.75);
 
     Future.delayed(const Duration(seconds: 2), () {
-      setState(() {
-        showCloseButton = true;
-      });
+      if (mounted) {
+        setState(() {
+          showCloseButton = true;
+        });
+      }
     });
 
     final base = 'https://app.resubscribe.ai';
@@ -57,30 +59,53 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
       'iframe': 'true',
       'hideclose': 'true'
     };
-    final uri = Uri.parse('$base/chat/${widget.slug}').replace(queryParameters: queryParams);
+
+    String path = 'chat';
+    if (widget.consent == 'ask') {
+      path = 'consent';
+    }
+    final uri = Uri.parse('$base/$path/${widget.slug}').replace(queryParameters: queryParams);
 
     _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setBackgroundColor(const Color(0x00000000))
+        ..setOnConsoleMessage((message) {
+          if (widget.debugMode)
+            debugPrint('* [${message.level}] ${message.message}');
+        })
+        // ..setOnJavaScriptAlertDialog((request) {
+        //   debugPrint('Alert: ${request.message}');
+        //   return Future.value(request.message);
+        // })
         ..loadRequest(uri)
         ..setNavigationDelegate(
           NavigationDelegate(
             onPageFinished: (String url) {
-              debugPrint('Page finished loading: $url');
+              if (widget.debugMode)
+                debugPrint('Page finished loading: $url');
               setState(() {
                 isLoading = false;
               });
             },
-            // onNavigationRequest: (NavigationRequest request) {
-            //   debugPrint('Navigation requested: ${request.url}');
-            //   return NavigationDecision.navigate;
-            // },
+            onWebResourceError: (WebResourceError error) {
+              if (widget.debugMode)
+                debugPrint('Error loading web resource: ${error.errorCode} ${error.description}');
+            },
+            onNavigationRequest: (NavigationRequest request) {
+              if (widget.debugMode)
+                debugPrint('Navigation requested: ${request.url}');
+              setState(() {
+                isLoading = true;
+              });
+              return NavigationDecision.navigate;
+            },
           )
         )
         ..addJavaScriptChannel(
-          'parent',
+          'resubscribe',
           onMessageReceived: (JavaScriptMessage message) {
-            debugPrint('Message received from JavaScript: ${message.message}');
+            if (widget.debugMode)
+              debugPrint('Message received from JavaScript: ${message.message}');
             try {
               var json = jsonDecode(message.message);
               if (json['type'] == 'close') {
@@ -92,7 +117,8 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
                 });
               }
             } catch (e) {
-              debugPrint('Error decoding JSON: $e');
+              if (widget.debugMode)
+                debugPrint('Error decoding JSON: $e');
             }
           },
         );
@@ -100,9 +126,9 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
 
   @override
   Widget build(BuildContext context) {
-    if (!widget.opened) {
-      return const SizedBox.shrink();
-    }
+    // if (!widget.opened) {
+    //   return const SizedBox.shrink();
+    // }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -134,7 +160,33 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
                   right: 8,
                   child: IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: widget.onClose,
+                    // show exit confirmation dialog
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text('Done giving feedback?'),
+                            // content: const Text('You won\'t be able to return to this chat.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                  widget.onClose();
+                                },
+                                child: const Text('Exit'),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
                   ),
                 ),
             ],
