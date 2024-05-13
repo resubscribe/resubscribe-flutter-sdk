@@ -17,7 +17,6 @@ if (showResubscribe)
     backgroundColor: Colors.white,
     aiType: 'intent', // Replace with the AI type
     uid: '{userid}', // Replace with the user ID
-    consent: 'ask',
     slug: 'test', // Replace with your slug
     debugMode: true,
     onClose: () {

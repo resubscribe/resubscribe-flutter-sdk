@@ -16,7 +16,7 @@ class ResubscribeSDK extends StatefulWidget {
     Key? key,
     required this.aiType,
     required this.uid,
-    this.consent = 'given',
+    this.consent = 'ask',
     required this.slug,
     required this.onClose,
     this.debugMode = false,
