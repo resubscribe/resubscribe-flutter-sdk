@@ -1,3 +1,7 @@
+## 1.0.2
+
+- Fix consent handling
+
 ## 1.0.1
 
 - Updated `pubspec.yaml`
