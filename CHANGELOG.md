@@ -1,3 +1,7 @@
+## 1.0.4
+
+- Update readme
+
 ## 1.0.3
 
 - Default to asking consent
