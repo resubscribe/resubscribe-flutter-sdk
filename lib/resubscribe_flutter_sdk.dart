@@ -30,9 +30,41 @@ class ResubscribeSDK extends StatefulWidget {
 
 class _ResubscribeSDKState extends State<ResubscribeSDK> {
   late final WebViewController _controller;
-  bool isLoading = true;
+  bool isLoading = false;
   bool showCloseButton = false;
+  bool consentAcquired = false;
   Color backgroundColor = Colors.white;
+
+  Uri buildUri() {
+    const base = 'https://app.resubscribe.ai';
+
+    final queryParams = {
+      'ait': widget.aiType,
+      'uid': widget.uid,
+      'iframe': 'true',
+      'hideclose': 'true'
+    };
+
+    String path = 'chat';
+    return Uri.parse('$base/$path/${widget.slug}')
+        .replace(queryParameters: queryParams);
+  }
+
+  void onConsentAcquired() {
+    setState(() {
+      consentAcquired = true;
+      isLoading = true;
+      showCloseButton = true;
+      backgroundColor = widget.backgroundColor;
+    });
+    _controller.loadRequest(buildUri());
+    _controller.setBackgroundColor(Colors.transparent);
+
+    // Future.delayed(const Duration(seconds: 2), () {
+    //   if (mounted) {
+    //   }
+    // });
+  }
 
   @override
   void initState() {
@@ -41,95 +73,67 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
     // Reduce opacity of background color prop by 25%
     backgroundColor = widget.backgroundColor.withOpacity(0.75);
 
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          showCloseButton = true;
-        });
-      }
-    });
-
-    final base = 'https://app.resubscribe.ai';
-    // final base = 'http://localhost:3000';
-
-    final queryParams = {
-      'ait': widget.aiType,
-      'uid': widget.uid,
-      'consent': widget.consent,
-      'iframe': 'true',
-      'hideclose': 'true'
-    };
-
-    String path = 'chat';
-    if (widget.consent == 'ask') {
-      path = 'consent';
-    }
-    final uri = Uri.parse('$base/$path/${widget.slug}').replace(queryParameters: queryParams);
-
     _controller = WebViewController()
-        ..setJavaScriptMode(JavaScriptMode.unrestricted)
-        ..setBackgroundColor(const Color(0x00000000))
-        ..setOnConsoleMessage((message) {
-          if (widget.debugMode)
-            debugPrint('* [${message.level}] ${message.message}');
-        })
-        // ..setOnJavaScriptAlertDialog((request) {
-        //   debugPrint('Alert: ${request.message}');
-        //   return Future.value(request.message);
-        // })
-        ..loadRequest(uri)
-        ..setNavigationDelegate(
-          NavigationDelegate(
-            onPageFinished: (String url) {
-              if (widget.debugMode)
-                debugPrint('Page finished loading: $url');
-              setState(() {
-                isLoading = false;
-              });
-            },
-            onWebResourceError: (WebResourceError error) {
-              if (widget.debugMode)
-                debugPrint('Error loading web resource: ${error.errorCode} ${error.description}');
-            },
-            onNavigationRequest: (NavigationRequest request) {
-              if (widget.debugMode)
-                debugPrint('Navigation requested: ${request.url}');
-              setState(() {
-                isLoading = true;
-              });
-              return NavigationDecision.navigate;
-            },
-          )
-        )
-        ..addJavaScriptChannel(
-          'resubscribe',
-          onMessageReceived: (JavaScriptMessage message) {
-            if (widget.debugMode)
-              debugPrint('Message received from JavaScript: ${message.message}');
-            try {
-              var json = jsonDecode(message.message);
-              if (json['type'] == 'close') {
-                widget.onClose();
-              }
-              if (json['type'] == 'consent') {
-                setState(() {
-                  backgroundColor = widget.backgroundColor;
-                });
-              }
-            } catch (e) {
-              if (widget.debugMode)
-                debugPrint('Error decoding JSON: $e');
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setOnConsoleMessage((message) {
+        if (widget.debugMode)
+          debugPrint('* [${message.level}] ${message.message}');
+      })
+      // ..setOnJavaScriptAlertDialog((request) {
+      //   debugPrint('Alert: ${request.message}');
+      //   return Future.value(request.message);
+      // })
+      ..setNavigationDelegate(NavigationDelegate(
+        onPageFinished: (String url) {
+          if (widget.debugMode) {
+            debugPrint('Page finished loading: $url');
+          }
+          setState(() {
+            isLoading = false;
+          });
+        },
+        onWebResourceError: (WebResourceError error) {
+          if (widget.debugMode) {
+            debugPrint('Error loading web resource: ${error.errorCode} ${error.description}');
+          }
+        },
+        onNavigationRequest: (NavigationRequest request) {
+          if (widget.debugMode) {
+            debugPrint('Navigation requested: ${request.url}');
+          }
+          setState(() {
+            isLoading = true;
+          });
+          return NavigationDecision.navigate;
+        },
+      ))
+      ..addJavaScriptChannel(
+        'resubscribe',
+        onMessageReceived: (JavaScriptMessage message) {
+          if (widget.debugMode) {
+            debugPrint('Message received from JavaScript: ${message.message}');
+          }
+          try {
+            var json = jsonDecode(message.message);
+            if (json['type'] == 'close') {
+              widget.onClose();
             }
-          },
-        );
+            // if (json['type'] == 'consent') {
+            //   setState(() {
+            //     backgroundColor = widget.backgroundColor;
+            //   });
+            // }
+          } catch (e) {
+            if (widget.debugMode) {
+              debugPrint('Error decoding JSON: $e');
+            }
+          }
+        },
+      );
   }
 
   @override
   Widget build(BuildContext context) {
-    // if (!widget.opened) {
-    //   return const SizedBox.shrink();
-    // }
-
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Dialog.fullscreen(
@@ -137,11 +141,23 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
         child: SafeArea(
           child: Stack(
             children: [
-              Center(
-                child: WebViewWidget(
-                  controller: _controller,
-                ),
-              ),
+              !consentAcquired
+                  ? Center(
+                      child: ResubscribeConsentModal(
+                        aiType: widget.aiType,
+                        onAccept: () {
+                          onConsentAcquired();
+                        },
+                        onDecline: () {
+                          widget.onClose();
+                        },
+                      ),
+                    )
+                  : Center(
+                      child: WebViewWidget(
+                        controller: _controller,
+                      ),
+                    ),
               if (isLoading)
                 Positioned(
                   top: 0,
@@ -193,6 +209,83 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class ResubscribeConsentModal extends StatelessWidget {
+  final String aiType;
+  final String acceptText;
+  final String declineText;
+  final String titleOverride;
+  final String contentOverride;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+
+  const ResubscribeConsentModal({
+    Key? key,
+    required this.aiType,
+    this.acceptText = 'Let\'s chat!',
+    this.declineText = 'Not right now',
+    this.titleOverride = '',
+    this.contentOverride = '',
+    required this.onAccept,
+    required this.onDecline,
+  }) : super(key: key);
+
+  String getTitle() {
+    if (titleOverride.isNotEmpty) {
+      return titleOverride;
+    }
+    if (aiType == 'intent') {
+      return 'Not ready to pay?';
+    }
+    if (aiType == 'churn') {
+      return 'We\'re sorry to see you go';
+    }
+    if (aiType == 'delete') {
+      return 'We\'re sorry to see you go';
+    }
+    if (aiType == 'subscriber') {
+      return 'Would you like to tell us about your experience?';
+    }
+    return 'Would you like to tell us about your experience?';
+  }
+
+  String getDescription() {
+    if (titleOverride.isNotEmpty) {
+      return titleOverride;
+    }
+    if (aiType == 'intent') {
+      return 'Can we ask you a few questions? It should only take a few minutes.';
+    }
+    if (aiType == 'churn') {
+      return 'Can we ask you a few questions? It should only take a few minutes.';
+    }
+    if (aiType == 'delete') {
+      return 'Can we ask you a few questions? It should only take a few minutes.';
+    }
+    if (aiType == 'subscriber') {
+      return 'Can we ask you a few questions? It should only take a few minutes.';
+    }
+    return 'Can we ask you a few questions? It should only take a few minutes.';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(getTitle()),
+      content: Text(getDescription()),
+      actions: <Widget>[
+        TextButton(
+          onPressed: onDecline,
+          child: Text(declineText),
+        ),
+        TextButton(
+          onPressed: onAccept,
+          child: Text(acceptText),
+        ),
+      ],
     );
   }
 }
