@@ -2,26 +2,40 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+class ResubscribeConsentOptions {
+  final String acceptText;
+  final String declineText;
+  final String titleOverride;
+  final String contentOverride;
+
+  const ResubscribeConsentOptions({
+    this.acceptText = 'Let\'s chat!',
+    this.declineText = 'Not right now',
+    this.titleOverride = '',
+    this.contentOverride = '',
+  });
+}
+
 class ResubscribeSDK extends StatefulWidget {
   final String aiType;
   final String uid;
-  final String consent;
   final String slug;
   final VoidCallback onClose;
   final bool debugMode;
   final Color loadingColor;
   final Color backgroundColor;
+  final ResubscribeConsentOptions consentOptions;
 
   const ResubscribeSDK({
     Key? key,
     required this.aiType,
     required this.uid,
-    this.consent = 'ask',
     required this.slug,
     required this.onClose,
     this.debugMode = false,
     this.loadingColor = Colors.black,
     this.backgroundColor = Colors.white,
+    this.consentOptions = const ResubscribeConsentOptions(),
   }) : super(key: key);
 
   @override
@@ -145,6 +159,10 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
                   ? Center(
                       child: ResubscribeConsentModal(
                         aiType: widget.aiType,
+                        acceptText: widget.consentOptions.acceptText,
+                        declineText: widget.consentOptions.declineText,
+                        titleOverride: widget.consentOptions.titleOverride,
+                        contentOverride: widget.consentOptions.contentOverride,
                         onAccept: () {
                           onConsentAcquired();
                         },
