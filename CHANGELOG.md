@@ -1,3 +1,7 @@
+## 1.0.6
+
+- Add consent options and readme info
+
 ## 1.0.5
 
 - Make consent modal part of the sdk

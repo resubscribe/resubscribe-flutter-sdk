@@ -47,3 +47,29 @@ Make sure your device has the following permissions:
 ```
 <uses-permission android:name="android.permission.INTERNET" />
 ```
+
+### Customization
+
+#### Consent options
+
+The text on the consent popup is already customized to the AI type you choose.
+
+However, if you want to override these values, then you can pass in the `consentOptions` to the `ResubscribeSDK`.
+
+```dart
+ResubscribeSDK(
+  // ...
+  consentOptions: const ResubscribeConsentOptions(
+    acceptText: 'Let\'s chat!',
+    declineText: 'Not right now',
+    titleOverride: 'CUSTOM TITLE',
+    contentOverride: 'CUSTOM CONTENT',
+  ),
+  // ...
+)
+```
+
+#### Dialog modals
+
+The dialogs are instances of Flutter's [AlertDialog](https://api.flutter.dev/flutter/material/AlertDialog-class.html). They can be customized via [ThemeData](https://api.flutter.dev/flutter/material/AlertDialog-class.html);
+
