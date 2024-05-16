@@ -20,7 +20,7 @@ class ResubscribeSDK extends StatefulWidget {
   final String aiType;
   final String uid;
   final String slug;
-  final VoidCallback onClose;
+  final VoidCallback? onClose;
   final bool debugMode;
   final Color loadingColor;
   final Color backgroundColor;
@@ -31,7 +31,7 @@ class ResubscribeSDK extends StatefulWidget {
     required this.aiType,
     required this.uid,
     required this.slug,
-    required this.onClose,
+    this.onClose,
     this.debugMode = false,
     this.loadingColor = Colors.black,
     this.backgroundColor = Colors.white,
@@ -40,6 +40,37 @@ class ResubscribeSDK extends StatefulWidget {
 
   @override
   _ResubscribeSDKState createState() => _ResubscribeSDKState();
+
+  static void openWithConsent({
+    required BuildContext context,
+    required String aiType,
+    required String uid,
+    required String slug,
+    VoidCallback? onClose,
+    bool debugMode = false,
+    Color loadingColor = Colors.black,
+    Color backgroundColor = Colors.white,
+    ResubscribeConsentOptions consentOptions = const ResubscribeConsentOptions(),
+  }) {
+    void onCloseWrapper() {
+      if (onClose != null) {
+        onClose();
+      }
+      Navigator.of(context).pop();
+    }
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return ResubscribeSDK(
+        aiType: aiType,
+        uid: uid,
+        slug: slug,
+        onClose: onCloseWrapper,
+        debugMode: debugMode,
+        loadingColor: loadingColor,
+        backgroundColor: backgroundColor,
+        consentOptions: consentOptions,
+      );
+    }));
+  }
 }
 
 class _ResubscribeSDKState extends State<ResubscribeSDK> {
@@ -64,6 +95,14 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
         .replace(queryParameters: queryParams);
   }
 
+  void onCloseWrapper() {
+    if (mounted) {
+      if (widget.onClose != null) {
+        widget.onClose!();
+      }
+    }
+  }
+
   void onConsentAcquired() {
     setState(() {
       consentAcquired = true;
@@ -75,8 +114,7 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
     _controller.setBackgroundColor(Colors.transparent);
 
     // Future.delayed(const Duration(seconds: 2), () {
-    //   if (mounted) {
-    //   }
+    //   if (mounted) {}
     // });
   }
 
@@ -130,7 +168,7 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
           try {
             var json = jsonDecode(message.message);
             if (json['type'] == 'close') {
-              widget.onClose();
+              onCloseWrapper();
             }
             // if (json['type'] == 'consent') {
             //   setState(() {
@@ -167,7 +205,7 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
                           onConsentAcquired();
                         },
                         onDecline: () {
-                          widget.onClose();
+                          onCloseWrapper();
                         },
                       ),
                     )
@@ -212,7 +250,9 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
                               TextButton(
                                 onPressed: () {
                                   Navigator.of(context).pop();
-                                  widget.onClose();
+                                  if (widget.onClose != null) {
+                                    widget.onClose!();
+                                  }
                                 },
                                 child: const Text('Exit'),
                               ),
