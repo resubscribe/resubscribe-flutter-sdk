@@ -271,8 +271,8 @@ class ResubscribeConsentModal extends StatelessWidget {
   }
 
   String getDescription() {
-    if (titleOverride.isNotEmpty) {
-      return titleOverride;
+    if (contentOverride.isNotEmpty) {
+      return contentOverride;
     }
     if (aiType == 'intent') {
       return 'Can we ask you a few questions? It should only take a few minutes.';
