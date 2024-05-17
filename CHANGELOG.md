@@ -1,3 +1,7 @@
+## 1.0.7
+
+- Fix bug with content override
+
 ## 1.0.6
 
 - Add consent options and readme info
