@@ -14,7 +14,7 @@ Import the Resubscribe package.
 import 'package:resubscribe_flutter_sdk/resubscribe_flutter_sdk.dart';
 ```
 
-Call the `ResubscribeSDK` widget.
+Call the Resubscribe package:
 
 ```dart
 ResubscribeSDK.openWithConsent(
@@ -47,7 +47,7 @@ The text on the consent popup is already customized to the AI type you choose.
 However, if you want to override these values, then you can pass in the `consentOptions` to the `ResubscribeSDK`.
 
 ```dart
-ResubscribeSDK(
+ResubscribeSDK.openWithConsent(
   // ...
   consentOptions: const ResubscribeConsentOptions(
     acceptText: 'Let\'s chat!',
