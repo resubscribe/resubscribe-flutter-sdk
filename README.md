@@ -8,36 +8,26 @@ Flutter SDK for [Resubscribe](https://resubscribe.ai).
 
 ## Usage
 
-Add a `showResubscribe` variable to your state.
+Import the Resubscribe package.
 
 ```dart
-bool showResubscribe = false;
+import 'package:resubscribe_flutter_sdk/resubscribe_flutter_sdk.dart';
 ```
 
-Trigger the `ResubscribeSDK` by setting `showResubscribe` to true.
-```dart
-setState(() {
-  showResubscribe = true;
-});
-```
-
-Add the `ResubscribeSDK` to your widget tree.
+Call the `ResubscribeSDK` widget.
 
 ```dart
-if (showResubscribe)
-  ResubscribeSDK(
-    loadingColor: Colors.black,
-    backgroundColor: Colors.white,
-    aiType: 'intent', // Replace with the AI type
-    uid: '{userid}', // Replace with the user ID
-    slug: 'test', // Replace with your slug
-    debugMode: true,
-    onClose: () {
-      setState(() {
-        showResubscribe = false;
-      });
-    },
-  ),
+ResubscribeSDK.openWithConsent(
+  context,
+  aiType: '{{aiType}}', // Replace with the AI type
+  uid: '{{userid}}', // Replace with the user ID
+  slug: '{{slug}}', // Replace with your slug
+  apiKey: '{{apiKey}}', // Replace with your API key
+  // debugMode: true,
+  // onClose: () {
+  //   debugPrint('onClose');
+  // },
+);
 ```
 
 ### Android
@@ -62,8 +52,8 @@ ResubscribeSDK(
   consentOptions: const ResubscribeConsentOptions(
     acceptText: 'Let\'s chat!',
     declineText: 'Not right now',
-    titleOverride: 'CUSTOM TITLE',
-    contentOverride: 'CUSTOM CONTENT',
+    titleText: 'CUSTOM TITLE',
+    descriptionText: 'CUSTOM CONTENT',
   ),
   // ...
 )
@@ -71,5 +61,5 @@ ResubscribeSDK(
 
 #### Dialog modals
 
-The dialogs are instances of Flutter's [AlertDialog](https://api.flutter.dev/flutter/material/AlertDialog-class.html). They can be customized via [ThemeData](https://api.flutter.dev/flutter/material/AlertDialog-class.html);
+The dialogs are instances of Flutter's [AlertDialog](https://api.flutter.dev/flutter/material/AlertDialog-class.html). They can be customized via [ThemeData](https://api.flutter.dev/flutter/material/AlertDialog-class.html).
 
