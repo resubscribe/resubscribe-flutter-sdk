@@ -2,17 +2,19 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+void noop() {}
+
 class ResubscribeConsentOptions {
   final String acceptText;
   final String declineText;
-  final String titleOverride;
-  final String contentOverride;
+  final String titleText;
+  final String descriptionText;
 
   const ResubscribeConsentOptions({
     this.acceptText = 'Let\'s chat!',
     this.declineText = 'Not right now',
-    this.titleOverride = '',
-    this.contentOverride = '',
+    this.titleText = '',
+    this.descriptionText = '',
   });
 }
 
@@ -20,6 +22,7 @@ class ResubscribeSDK extends StatefulWidget {
   final String aiType;
   final String uid;
   final String slug;
+  final String apiKey;
   final VoidCallback onClose;
   final bool debugMode;
   final Color loadingColor;
@@ -31,15 +34,44 @@ class ResubscribeSDK extends StatefulWidget {
     required this.aiType,
     required this.uid,
     required this.slug,
+    required this.apiKey,
     required this.onClose,
-    this.debugMode = false,
-    this.loadingColor = Colors.black,
-    this.backgroundColor = Colors.white,
-    this.consentOptions = const ResubscribeConsentOptions(),
-  }) : super(key: key);
+    required this.debugMode,
+    required this.loadingColor,
+    required this.backgroundColor,
+    required this.consentOptions,
+  });
+
+  static void openWithConsent(BuildContext context, {
+    required String aiType,
+    required String uid,
+    required String slug,
+    required String apiKey,
+    onClose = noop,
+    debugMode = false,
+    loadingColor = Colors.black,
+    backgroundColor = Colors.white,
+    consentOptions = const ResubscribeConsentOptions(),
+  }) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ResubscribeSDK(
+          aiType: aiType,
+          uid: uid,
+          slug: slug,
+          apiKey: apiKey,
+          onClose: onClose,
+          debugMode: debugMode,
+          loadingColor: loadingColor,
+          backgroundColor: backgroundColor,
+          consentOptions: consentOptions,
+        ),
+      ),
+    );
+  }
 
   @override
-  _ResubscribeSDKState createState() => _ResubscribeSDKState();
+  State<ResubscribeSDK> createState() => _ResubscribeSDKState();
 }
 
 class _ResubscribeSDKState extends State<ResubscribeSDK> {
@@ -58,10 +90,24 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
       'iframe': 'true',
       'hideclose': 'true'
     };
+    final fragment = 'apiKey=${widget.apiKey}';
 
     String path = 'chat';
     return Uri.parse('$base/$path/${widget.slug}')
-        .replace(queryParameters: queryParams);
+        .replace(queryParameters: queryParams, fragment: fragment);
+  }
+  
+  void onCloseViaConsent() {
+    widget.onClose();
+    Navigator.of(context).pop();
+  }
+
+  void onCloseViaWebView() {
+    widget.onClose();
+    // close the dialog
+    Navigator.of(context).pop();
+    // close the webview
+    Navigator.of(context).pop();
   }
 
   void onConsentAcquired() {
@@ -69,29 +115,21 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
       consentAcquired = true;
       isLoading = true;
       showCloseButton = true;
-      backgroundColor = widget.backgroundColor;
     });
     _controller.loadRequest(buildUri());
     _controller.setBackgroundColor(Colors.transparent);
-
-    // Future.delayed(const Duration(seconds: 2), () {
-    //   if (mounted) {
-    //   }
-    // });
   }
 
   @override
   void initState() {
     super.initState();
 
-    // Reduce opacity of background color prop by 25%
-    backgroundColor = widget.backgroundColor.withOpacity(0.75);
-
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setOnConsoleMessage((message) {
-        if (widget.debugMode)
+        if (widget.debugMode) {
           debugPrint('* [${message.level}] ${message.message}');
+        }
       })
       // ..setOnJavaScriptAlertDialog((request) {
       //   debugPrint('Alert: ${request.message}');
@@ -130,17 +168,10 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
           try {
             var json = jsonDecode(message.message);
             if (json['type'] == 'close') {
-              widget.onClose();
+              onCloseViaWebView();
             }
-            // if (json['type'] == 'consent') {
-            //   setState(() {
-            //     backgroundColor = widget.backgroundColor;
-            //   });
-            // }
           } catch (e) {
-            if (widget.debugMode) {
-              debugPrint('Error decoding JSON: $e');
-            }
+            debugPrint('Error decoding JSON: $e');
           }
         },
       );
@@ -151,7 +182,7 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: Dialog.fullscreen(
-        backgroundColor: backgroundColor,
+        backgroundColor: Colors.white,
         child: SafeArea(
           child: Stack(
             children: [
@@ -159,16 +190,14 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
                   ? Center(
                       child: ResubscribeConsentModal(
                         aiType: widget.aiType,
+                        onAccept: onConsentAcquired,
+                        onDecline: () {
+                          onCloseViaConsent();
+                        },
                         acceptText: widget.consentOptions.acceptText,
                         declineText: widget.consentOptions.declineText,
-                        titleOverride: widget.consentOptions.titleOverride,
-                        contentOverride: widget.consentOptions.contentOverride,
-                        onAccept: () {
-                          onConsentAcquired();
-                        },
-                        onDecline: () {
-                          widget.onClose();
-                        },
+                        titleText: widget.consentOptions.titleText,
+                        descriptionText: widget.consentOptions.descriptionText,
                       ),
                     )
                   : Center(
@@ -177,14 +206,14 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
                       ),
                     ),
               if (isLoading)
-                Positioned(
+                const Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
                   bottom: 0,
                   child: Center(
                     child: CircularProgressIndicator(
-                      color: widget.loadingColor,
+                      color: Colors.blue,
                     ),
                   ),
                 ),
@@ -194,25 +223,23 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
                   right: 8,
                   child: IconButton(
                     icon: const Icon(Icons.close),
-                    // show exit confirmation dialog
                     onPressed: () {
                       showDialog(
                         context: context,
                         builder: (context) {
                           return AlertDialog(
                             title: const Text('Done giving feedback?'),
-                            // content: const Text('You won\'t be able to return to this chat.'),
                             actions: [
                               TextButton(
                                 onPressed: () {
+                                  // close the confirmation dialog
                                   Navigator.of(context).pop();
                                 },
                                 child: const Text('Cancel'),
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.of(context).pop();
-                                  widget.onClose();
+                                  onCloseViaWebView();
                                 },
                                 child: const Text('Exit'),
                               ),
@@ -233,27 +260,27 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
 
 class ResubscribeConsentModal extends StatelessWidget {
   final String aiType;
-  final String acceptText;
-  final String declineText;
-  final String titleOverride;
-  final String contentOverride;
   final VoidCallback onAccept;
   final VoidCallback onDecline;
+  final String acceptText;
+  final String declineText;
+  final String titleText;
+  final String descriptionText;
 
   const ResubscribeConsentModal({
     Key? key,
     required this.aiType,
-    this.acceptText = 'Let\'s chat!',
-    this.declineText = 'Not right now',
-    this.titleOverride = '',
-    this.contentOverride = '',
     required this.onAccept,
     required this.onDecline,
-  }) : super(key: key);
+    this.acceptText = 'Let\'s chat!',
+    this.declineText = 'Not right now',
+    this.titleText = '',
+    this.descriptionText = '',
+  });
 
   String getTitle() {
-    if (titleOverride.isNotEmpty) {
-      return titleOverride;
+    if (titleText.isNotEmpty) {
+      return titleText;
     }
     if (aiType == 'intent') {
       return 'Not ready to pay?';
@@ -271,8 +298,8 @@ class ResubscribeConsentModal extends StatelessWidget {
   }
 
   String getDescription() {
-    if (contentOverride.isNotEmpty) {
-      return contentOverride;
+    if (descriptionText.isNotEmpty) {
+      return descriptionText;
     }
     if (aiType == 'intent') {
       return 'Can we ask you a few questions? It should only take a few minutes.';
