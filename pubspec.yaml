@@ -9,8 +9,8 @@ platforms:
   android:
 
 topics:
-  - user interviews
-  - user research
+  - user-interviews
+  - user-research
   - feedback
 
 environment:
