@@ -20,7 +20,7 @@ class ResubscribeConsentOptions {
 
 class ResubscribeSDK extends StatefulWidget {
   final String aiType;
-  final String uid;
+  final String userId;
   final String slug;
   final String apiKey;
   final VoidCallback onClose;
@@ -32,7 +32,7 @@ class ResubscribeSDK extends StatefulWidget {
   const ResubscribeSDK({
     Key? key,
     required this.aiType,
-    required this.uid,
+    required this.userId,
     required this.slug,
     required this.apiKey,
     required this.onClose,
@@ -44,7 +44,7 @@ class ResubscribeSDK extends StatefulWidget {
 
   static void openWithConsent(BuildContext context, {
     required String aiType,
-    required String uid,
+    required String userId,
     required String slug,
     required String apiKey,
     onClose = noop,
@@ -57,7 +57,7 @@ class ResubscribeSDK extends StatefulWidget {
       MaterialPageRoute(
         builder: (context) => ResubscribeSDK(
           aiType: aiType,
-          uid: uid,
+          userId: userId,
           slug: slug,
           apiKey: apiKey,
           onClose: onClose,
@@ -86,7 +86,7 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
 
     final queryParams = {
       'ait': widget.aiType,
-      'uid': widget.uid,
+      'uid': widget.userId,
       'iframe': 'true',
       'hideclose': 'true'
     };

@@ -20,7 +20,7 @@ Call the Resubscribe package:
 ResubscribeSDK.openWithConsent(
   context,
   aiType: '{{aiType}}', // Replace with the AI type
-  uid: '{{userid}}', // Replace with the user ID
+  userId: '{{userid}}', // Replace with the user ID
   slug: '{{slug}}', // Replace with your slug
   apiKey: '{{apiKey}}', // Replace with your API key
   // debugMode: true,

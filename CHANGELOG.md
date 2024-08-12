@@ -1,3 +1,7 @@
+## 1.0.10
+
+- Change flutter sdk to match other sdks
+
 ## 1.0.9
 
 - Update readme
