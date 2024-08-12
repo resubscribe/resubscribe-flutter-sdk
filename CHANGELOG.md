@@ -1,3 +1,8 @@
+## 1.0.8
+
+- Add api key
+- Improve pattern for calling resubscribe
+
 ## 1.0.7
 
 - Fix bug with content override
