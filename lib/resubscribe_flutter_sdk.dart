@@ -47,7 +47,7 @@ Future<void> registerConsent(
     );
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      debugModePrint('Consent registered successfully', debugMode);
+      debugModePrint('Consent registered successfully ${response.statusCode}', debugMode);
     } else {
       debugModePrint('Error registering consent: ${response.body}', debugMode);
     }

@@ -1,3 +1,7 @@
+## 1.0.11
+
+- Register consent
+
 ### 1.0.11-beta.1
 
 - Test for consent register
