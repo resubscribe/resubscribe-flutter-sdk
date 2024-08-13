@@ -1,6 +1,60 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+
+final String apiUrl = 'https://api.resubscribe.ai/v1';
+
+void debugModePrint(String message, bool debugMode) {
+  if (debugMode) {
+    debugPrint(message);
+  }
+}
+
+// return the locale in the form "en" or "en-US"
+String getLocale() {
+  // in the form "en" or "en_US" or "en_US.UTF-8"
+  final locale = Platform.localeName;
+  final parts = locale.split('.');
+  final lang = parts[0].split('_').join('-');
+  return lang;
+}
+
+Future<void> registerConsent(
+  String userId,
+  String aiType,
+  String slug,
+  String apiKey,
+  bool debugMode,
+) async {
+  debugModePrint('Registering consent for $userId, $aiType, $slug', debugMode);
+  try {
+    final locale = getLocale();
+    String queryString = Uri(queryParameters: {
+      'uid': userId,
+      'ait': aiType,
+      'slug': slug,
+      'brloc': locale,
+    }).query;
+    String requestUrl = '$apiUrl/sessions/consent?$queryString';
+    
+    final response = await http.get(
+      Uri.parse(requestUrl),
+      headers: {
+        'Authorization': 'Bearer $apiKey',
+      },
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      debugModePrint('Consent registered successfully', debugMode);
+    } else {
+      debugModePrint('Error registering consent: ${response.body}', debugMode);
+    }
+  } catch (e) {
+    debugModePrint('Error registering consent: $e', debugMode);
+  }
+}
 
 void noop() {}
 
@@ -53,6 +107,7 @@ class ResubscribeSDK extends StatefulWidget {
     backgroundColor = Colors.white,
     consentOptions = const ResubscribeConsentOptions(),
   }) {
+    registerConsent(userId, aiType, slug, apiKey, debugMode);
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => ResubscribeSDK(
