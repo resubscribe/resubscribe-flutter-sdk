@@ -1,3 +1,7 @@
+### 1.0.11-beta.1
+
+- Test for consent register
+
 ## 1.0.10
 
 - Change flutter sdk to match other sdks
