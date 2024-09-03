@@ -1,3 +1,7 @@
+## 1.0.12
+
+- Fix bug with firebase
+
 ## 1.0.11
 
 - Register consent

@@ -208,9 +208,10 @@ class _ResubscribeSDKState extends State<ResubscribeSDK> {
           if (widget.debugMode) {
             debugPrint('Navigation requested: ${request.url}');
           }
-          setState(() {
-            isLoading = true;
-          });
+          // firebase triggers an auth navigation request, so don't set loading
+          // setState(() {
+          //   isLoading = true;
+          // });
           return NavigationDecision.navigate;
         },
       ))
