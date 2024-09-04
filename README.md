@@ -2,11 +2,17 @@
 
 Flutter SDK for [Resubscribe](https://resubscribe.ai).
 
-## Installation
+## Setup
 
-[https://pub.dev/packages/resubscribe_flutter_sdk](https://pub.dev/packages/resubscribe_flutter_sdk)
+### Installation
 
-## Usage
+```bash
+flutter pub add resubscribe_flutter_sdk
+```
+
+See the official package at: [https://pub.dev/packages/resubscribe_flutter_sdk](https://pub.dev/packages/resubscribe_flutter_sdk)
+
+### Usage
 
 Import the Resubscribe package.
 
